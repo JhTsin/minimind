@@ -3,3 +3,7 @@ out
 website/
 docs-minimind/
 dataset/
+.vscode/
+*.pth
+*.pyc
+*.log
