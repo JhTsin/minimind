@@ -4,6 +4,7 @@ website/
 docs-minimind/
 dataset/
 .vscode/
+notebook/
 *.pth
 *.pyc
 *.log
