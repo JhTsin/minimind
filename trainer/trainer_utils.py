@@ -28,7 +28,7 @@ def get_model_params(model, config):
     else: Logger(f'Model Params: {total:.2f}M')
 
 
-def is_main_process():
+def is_main_process(): # 单卡或者分布式中的主进程才执行，只需要主进程，否则串了
     return not dist.is_initialized() or dist.get_rank() == 0
 
 
@@ -61,6 +61,7 @@ def setup_seed(seed: int):
     torch.backends.cudnn.benchmark = False
 
 def lm_checkpoint(lm_config, weight='full_sft', model=None, optimizer=None, epoch=0, step=0, wandb=None, save_dir='../checkpoints', **kwargs):
+    # ======== 保存ckp和加载ckp ========
     os.makedirs(save_dir, exist_ok=True)
     moe_path = '_moe' if lm_config.use_moe else ''
     ckp_path = f'{save_dir}/{weight}_{lm_config.hidden_size}{moe_path}.pth'
@@ -72,7 +73,7 @@ def lm_checkpoint(lm_config, weight='full_sft', model=None, optimizer=None, epoc
         state_dict = raw_model.state_dict()
         state_dict = {k: v.half().cpu() for k, v in state_dict.items()}
         ckp_tmp = ckp_path + '.tmp'
-        torch.save(state_dict, ckp_tmp)
+        torch.save(state_dict, ckp_tmp) # 先保存到临时文件，确保写入完整后再替换原文件，避免损坏已有ckp《原子替换》
         os.replace(ckp_tmp, ckp_path)
         wandb_id = None
         if wandb:
